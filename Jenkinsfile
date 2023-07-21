@@ -17,18 +17,6 @@ pipeline{
             }
         }
 
-        stage('Get last commit author and bot name') {
-            steps {
-                script {
-                    env.GIT_AUTHOR = sh (script: 'git log --no-merges -1 --pretty=%cn', returnStdout: true).trim()
-                    env.DIFFBLUE_BOT_NAME = "db-ci-bot"
-                }
-                sh '''#!/bin/bash
-                    echo "Git author is $GIT_AUTHOR and the Diffblue bot name is $DIFFBLUE_BOT_NAME"
-                '''
-            }
-        }
-
         stage('Build project') {
             steps { // Step 1
               sh 'mvn --batch-mode --no-transfer-progress clean install -DskipTests'
