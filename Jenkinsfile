@@ -13,8 +13,6 @@ pipeline{
                 cleanWs() // clean jenkins so it re-clones
                 checkout scm // re-clone/re-download
                 sh 'git branch'
-                sh "git checkout ${ghprbSourceBranch}"
-                sh 'git branch'
                 sh 'git status'
             }
         }
