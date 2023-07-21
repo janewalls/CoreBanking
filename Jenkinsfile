@@ -10,8 +10,24 @@ pipeline{
     stages {
         stage('sanity checks') {
             steps {
-              sh 'git branch'
-              sh 'git status'
+                cleanWs() // clean jenkins so it re-clones
+                checkout scm // re-clone/re-download
+                sh 'git branch'
+                sh "git checkout ${ghprbSourceBranch}"
+                sh 'git branch'
+                sh 'git status'
+            }
+        }
+
+        stage('Get last commit author and bot name') {
+            steps {
+                script {
+                    env.GIT_AUTHOR = sh (script: 'git log --no-merges -1 --pretty=%cn', returnStdout: true).trim()
+                    env.DIFFBLUE_BOT_NAME = "db-ci-bot"
+                }
+                sh '''#!/bin/bash
+                    echo "Git author is $GIT_AUTHOR and the Diffblue bot name is $DIFFBLUE_BOT_NAME"
+                '''
             }
         }
 
@@ -66,7 +82,7 @@ pipeline{
                        git push --set-upstream origin
                      else
                        echo "Nothing to commit"
-                   fi
+                     fi
                 '''
             }
         }
