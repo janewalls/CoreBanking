@@ -4,7 +4,7 @@ pipeline{
         DB_RELEASE_URL = credentials('DB_RELEASE_URL')
         DB_LICENSE_KEY = credentials('DB_LICENSE_KEY')
         DB_LICENSE_LIC = credentials('DB_LICENSE_LIC')
-
+        DB_SSH_KEY = credentials('DB_SSH_KEY')
     }
 
     stages {
@@ -36,9 +36,6 @@ pipeline{
                       echo "Activate dcover online"
                       "$DCOVER_SCRIPT_LOCATION" activate "$DB_LICENSE_KEY"
 
-                      "$DCOVER_SCRIPT_LOCATION" license || true
-
-
                       echo "Running dcover with create on create, you may need to update this to reflect your project"
                       "$DCOVER_SCRIPT_LOCATION" create --batch
                   '''
@@ -46,12 +43,31 @@ pipeline{
                  /*
                  sh ''' OFFLINE
                     echo "Activate dcover offline"
-                    "$DCOVER_SCRIPT_LOCATION" activate --offline "$DB_LICENSE_KEY"
+                    "$DCOVER_SCRIPT_LOCATION" license || true
                     cp "$DB_LICENSE_LIC" ${HOME}/.diffblue/offline/
                     "$DCOVER_SCRIPT_LOCATION" activate --offline "$DB_LICENSE_KEY"
                  '''
                  */
             }
+        }
+
+        stage('Commit new tests to git') {
+        steps{
+            sh '''
+                echo "Remote host set up"
+                eval "$(ssh-agent -s)"
+                ssh-add $DB_SSH_KEY
+                git config user.name db-ci-bot
+                git config user.email db-ci-bot-jane@diffblue.com
+
+               if [ -n "$(git status --short **/*DiffblueTest.java)" ]; then
+                   git add **/*DiffblueTest.java
+                   git commit --message "Update Unit Tests for $(git rev-parse --short HEAD)"
+                   git push --set-upstream origin
+                 else
+                   echo "Nothing to commit"
+               fi
+            '''
         }
     }
 }
