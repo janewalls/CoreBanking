@@ -52,22 +52,23 @@ pipeline{
         }
 
         stage('Commit new tests to git') {
-        steps{
-            sh '''
-                echo "Remote host set up"
-                eval "$(ssh-agent -s)"
-                ssh-add $DB_SSH_KEY
-                git config user.name db-ci-bot
-                git config user.email db-ci-bot-jane@diffblue.com
+            steps{
+                sh '''
+                    echo "Remote host set up"
+                    eval "$(ssh-agent -s)"
+                    ssh-add $DB_SSH_KEY
+                    git config user.name db-ci-bot
+                    git config user.email db-ci-bot-jane@diffblue.com
 
-               if [ -n "$(git status --short **/*DiffblueTest.java)" ]; then
-                   git add **/*DiffblueTest.java
-                   git commit --message "Update Unit Tests for $(git rev-parse --short HEAD)"
-                   git push --set-upstream origin
-                 else
-                   echo "Nothing to commit"
-               fi
-            '''
+                   if [ -n "$(git status --short **/*DiffblueTest.java)" ]; then
+                       git add **/*DiffblueTest.java
+                       git commit --message "Update Unit Tests for $(git rev-parse --short HEAD)"
+                       git push --set-upstream origin
+                     else
+                       echo "Nothing to commit"
+                   fi
+                '''
+            }
         }
     }
 }
